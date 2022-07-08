@@ -61,25 +61,29 @@ maze seed ((width, height) as size) =
 solve : Maze -> List Point
 solve { start, end, paths } =
   let
-    distance : Point -> DistanceMap -> DistanceMap
-    distance pt map =
+    distanceMap : Point -> DistanceMap -> DistanceMap
+    distanceMap pt map =
       let
         children : List Point
         children = connectedPoints paths pt
 
         update : Int -> DistanceMap
-        update dist = List.foldl distance (Dict.insert pt dist map) children
+        update dist = List.foldl distanceMap (Dict.insert pt dist map) children
+
+        updateIfModified : Int -> DistanceMap
+        updateIfModified dist =
+          case Dict.get pt map of
+            Nothing -> update dist
+            Just origDist ->
+              if origDist == dist then
+                map
+              else
+                update dist
+
       in
-        case Maybe.map (\x -> x + 1) (List.minimum (List.filterMap (\p -> Dict.get p map) children)) of
-          Nothing -> update 0
-          Just dist ->
-            case Dict.get pt map of
-              Nothing -> update dist
-              Just origDist ->
-                if origDist <= dist then
-                  map
-                else
-                  update dist
+        case List.minimum (List.filterMap (\p -> Dict.get p map) children) of
+          Nothing -> updateIfModified 0
+          Just dist -> updateIfModified (dist + 1)
 
     walk : Point -> List Point -> DistanceMap -> List Point
     walk pt route map =
@@ -87,7 +91,7 @@ solve { start, end, paths } =
         children : List Point
         children = connectedPoints paths pt
 
-        childrenWithDist = List.filterMap (\p -> Maybe.map (Tuple.pair p) (Dict.get p map)) children
+        childrenWithDist = List.filterMap (\p -> Dict.get p map |> Maybe.map (Tuple.pair p)) children
 
         nextPoint = List.sortBy Tuple.second childrenWithDist |> List.head |> Maybe.map Tuple.first
       in
@@ -95,4 +99,4 @@ solve { start, end, paths } =
           Nothing -> route
           Just p -> if p == start then (p :: route) else walk p (p :: route) map
   in
-    distance start (Dict.empty) |> walk end [end]
+    distanceMap start (Dict.empty) |> walk end [end]
