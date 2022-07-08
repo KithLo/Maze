@@ -36,8 +36,8 @@ connectedPoints paths pt = List.filterMap (\(p1, p2) ->
 xor : Set comparable -> Set comparable -> Set comparable
 xor s1 s2 = Set.diff (Set.union s1 s2) (Set.intersect s1 s2)
 
-maze : Random.Seed -> Point -> Maze
-maze seed ((width, height) as size) =
+maze : Point -> Random.Seed -> Maze
+maze ((width, height) as size) seed =
   let
     start = (0, 0)
     generate : List Path -> Random.Seed -> Set Point -> Set Path -> List Path
@@ -70,20 +70,20 @@ solve { start, end, paths } =
         update : Int -> DistanceMap
         update dist = List.foldl distanceMap (Dict.insert pt dist map) children
 
-        updateIfModified : Int -> DistanceMap
-        updateIfModified dist =
+        updateIfSmaller : Int -> DistanceMap
+        updateIfSmaller dist =
           case Dict.get pt map of
             Nothing -> update dist
             Just origDist ->
-              if origDist == dist then
+              if origDist <= dist then
                 map
               else
                 update dist
 
       in
         case List.minimum (List.filterMap (\p -> Dict.get p map) children) of
-          Nothing -> updateIfModified 0
-          Just dist -> updateIfModified (dist + 1)
+          Nothing -> updateIfSmaller 0
+          Just dist -> updateIfSmaller (dist + 1)
 
     walk : Point -> List Point -> DistanceMap -> List Point
     walk pt route map =
