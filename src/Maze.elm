@@ -3,6 +3,7 @@ import Set exposing (Set)
 import Dict exposing (Dict)
 import Random
 import Random.Set
+import Maybe exposing (withDefault)
 
 type alias Point = (Int, Int)
 type alias Path = (Point, Point)
@@ -22,16 +23,6 @@ adjacentPoints size (x, y) =
 
 adjacentPaths : Point -> Point -> List Path
 adjacentPaths size pt = List.map (path pt) (adjacentPoints size pt)
-
-connectedPoints : List Path -> Point -> List Point
-connectedPoints paths pt = List.filterMap (\(p1, p2) ->
-    if p1 == pt then
-      Just p2
-    else if p2 == pt then
-      Just p1
-    else
-      Nothing
-  ) paths
 
 xor : Set comparable -> Set comparable -> Set comparable
 xor s1 s2 = Set.diff (Set.union s1 s2) (Set.intersect s1 s2)
@@ -61,11 +52,17 @@ maze ((width, height) as size) seed =
 solve : Maze -> List Point
 solve { start, end, paths } =
   let
+    addToConn : Point -> Point -> Dict Point (List Point) -> Dict Point (List Point)
+    addToConn k v dict = Dict.insert k (v::(Dict.get k dict |> withDefault [])) dict
+
+    connectionMap : Dict Point (List Point)
+    connectionMap = List.foldl (\(p1, p2) dict -> addToConn p1 p2 dict |> addToConn p2 p1) Dict.empty paths
+
     distanceMap : Point -> DistanceMap -> DistanceMap
     distanceMap pt map =
       let
         children : List Point
-        children = connectedPoints paths pt
+        children = Dict.get pt connectionMap |> Maybe.withDefault []
 
         update : Int -> DistanceMap
         update dist = List.foldl distanceMap (Dict.insert pt dist map) children
@@ -89,7 +86,7 @@ solve { start, end, paths } =
     walk pt route map =
       let
         children : List Point
-        children = connectedPoints paths pt
+        children = Dict.get pt connectionMap |> Maybe.withDefault []
 
         childrenWithDist = List.filterMap (\p -> Dict.get p map |> Maybe.map (Tuple.pair p)) children
 
