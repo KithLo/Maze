@@ -16,15 +16,15 @@ type alias Model =
   }
 
 init : (Model, Cmd Msg)
-init = ({ width = "", height = "", maze = Nothing, solution = [] }, Cmd.none)
+init = ({ width = "30", height = "30", maze = Nothing, solution = [] }, Random.generate GenerateResult (mazeGenerator (30, 30)))
 
 type Msg = ChangeWidth String | ChangeHeight String | Generate | GenerateResult Maze | Solve
 
 isSizeValid : Point -> Bool
-isSizeValid (width, height) = width >= 2 && height >= 2 && width <= 60 && height <= 60
+isSizeValid (width, height) = width >= 2 && height >= 2 && width <= 40 && height <= 40
 
 mazeGenerator : Point -> Random.Generator Maze
-mazeGenerator size = Random.map (Maze.maze size) Random.independentSeed
+mazeGenerator size = Random.map (Maze.generate size) Random.independentSeed
 
 alternate : (a -> c) -> (b -> c) -> List a -> List b -> List c
 alternate f1 f2 l1 l2 =
@@ -47,7 +47,7 @@ renderMaze { size, start, end, paths } sol =
 
     pathSet = Set.fromList paths
     solutionSet = Set.fromList sol
-    solutionPaths = List.map2 Maze.path sol (List.drop 1 sol)
+    solutionPaths = List.map2 Maze.newPath sol (List.drop 1 sol)
     solutionPathSet = Set.fromList solutionPaths
 
     renderPoint : Point -> Html Msg
@@ -145,7 +145,7 @@ view : Model -> Html Msg
 view model =
   div [style "padding" "20px"]
     [ div [style "padding-bottom" "20px"]
-      [ text "Min size: 2. Max size: 60"
+      [ text "Min size: 2. Max size: 40"
       ]
     , div [style "padding-bottom" "20px"]
       [ text "Width"
