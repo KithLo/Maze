@@ -99,13 +99,13 @@ renderMaze { size, start, end, paths } sol =
         edges : List Path
         edges = List.map2 Tuple.pair points pointsBelow
       in
-        alternate renderPath (\_ -> renderCorner) edges (List.repeat (width - 1) 0)
+        alternate renderPath (\_ -> renderCorner) edges (List.repeat (width - 1) ())
 
     pointSize = "1fr"
     pathSize = (String.fromInt (200 // width)) ++ "px"
 
     gridTemplate : Int -> String
-    gridTemplate length = String.join " " (alternate (\_ -> pointSize) (\_ -> pathSize) (List.repeat length 0) (List.repeat (length - 1) 0))
+    gridTemplate length = String.join " " (alternate (\_ -> pointSize) (\_ -> pathSize) (List.repeat length ()) (List.repeat (length - 1) ()))
 
     addBorder : String -> String
     addBorder s = pathSize ++ " " ++ s ++ " " ++ pathSize
