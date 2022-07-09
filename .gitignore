@@ -4,6 +4,7 @@ node_modules/
 Thumbs.db
 $RECYCLE.BIN/
 elm-stuff/
+index.html
 
 .vscode/*
 !.vscode/settings.json
