@@ -31,6 +31,9 @@ maze : Point -> Random.Seed -> Maze
 maze ((width, height) as size) seed =
   let
     start = (0, 0)
+    (x, s1) = Random.step (Random.int 0 (width - 1)) seed
+    (y, s2) = Random.step (Random.int 0 (height - 1)) s1
+
     generate : List Path -> Random.Seed -> Set Point -> Set Path -> List Path
     generate paths seed1 visited candidates =
       case Random.step (Random.Set.sample candidates) seed1 of
@@ -46,7 +49,7 @@ maze ((width, height) as size) seed =
     { size = size
     , start = start
     , end = (width - 1, height - 1)
-    , paths = (generate [] seed (Set.singleton start) (Set.fromList (adjacentPaths size start)))
+    , paths = (generate [] s2 (Set.singleton (x, y)) (Set.fromList (adjacentPaths size (x, y))))
     }
 
 solve : Maze -> List Point
